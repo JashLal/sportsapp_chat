@@ -9,6 +9,7 @@ import (
 
 type Client interface {
 	CreateConversation(name string) (string, error)
+	CreateUser(username, name string) (string, error)
 }
 
 type client struct {
@@ -32,6 +33,23 @@ func (c client) CreateConversation(name string) (string, error) {
 
 	if resp.Sid == nil {
 		return "", fmt.Errorf("CreateConversation request returned nil Sid")
+	}
+
+	return *resp.Sid, nil
+}
+
+func (c client) CreateUser(username, name string) (string, error) {
+	params := &conversations.CreateUserParams{}
+	params.SetIdentity(username)
+	params.SetFriendlyName(name)
+
+	resp, err := c.client.ConversationsV1.CreateUser(params)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.Sid == nil {
+		return "", fmt.Errorf("CreateUser request returned nil Sid")
 	}
 
 	return *resp.Sid, nil

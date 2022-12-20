@@ -17,6 +17,7 @@ func main() {
 		})
 	})
 	r.POST("/conversation", createConversation)
+	r.POST("/user", createUser)
 	r.Run()
 }
 
@@ -37,6 +38,33 @@ func createConversation(c *gin.Context) {
 	}
 
 	sid, err := twilioClient.CreateConversation(args.FriendlyName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"msg": "success", "sid": sid})
+}
+
+type createUserArgs struct {
+	Identity     string `json:"username"`
+	FriendlyName string `json:"name"`
+}
+
+func createUser(c *gin.Context) {
+	args := createUserArgs{}
+
+	if err := c.ShouldBindJSON(&args); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+
+	if args.Identity == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "username key should have non-empty value"})
+		return
+	}
+
+	sid, err := twilioClient.CreateUser(args.Identity, args.FriendlyName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 		return
